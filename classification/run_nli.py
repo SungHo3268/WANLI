@@ -156,7 +156,7 @@ def main():
 
     for key in data_files.keys():
         logger.info(f"load a local file for {key}: {data_files[key]}")
-
+    
     raw_datasets = load_dataset("json", data_files=data_files, cache_dir=model_args.cache_dir)
     sentence1_key, sentence2_key, label_key = 'premise', 'hypothesis', 'gold'
     
@@ -164,7 +164,7 @@ def main():
         return example[label_key] != '-'
     
     raw_datasets = raw_datasets.filter(filter_function) 
-
+    
     # labels
     label_list = ['contradiction', 'entailment', 'neutral']
     label_list.sort()
@@ -189,7 +189,7 @@ def main():
     model.config.label2id = label_to_id
     model.config.id2label = {id: label for label, id in label_to_id.items()}
     max_seq_length = min(data_args.max_seq_length, tokenizer.model_max_length)
-
+    
     def preprocess_function(examples):
         args = (examples[sentence1_key], examples[sentence2_key])
         result = tokenizer(*args, padding="max_length", max_length=max_seq_length, truncation=True)
@@ -252,17 +252,17 @@ def main():
             data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
         )
         metrics["train_samples"] = min(max_train_samples, len(train_dataset))
-
+        
         trainer.save_model()
         trainer.log_metrics("train", metrics)
         trainer.save_metrics("train", metrics)
         trainer.save_state()
-
+        
     # evaluation
     if training_args.do_eval:
         logger.info("*** Evaluate ***")
         metrics = trainer.evaluate(eval_dataset=eval_dataset)
-
+        
         max_eval_samples = (
             data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
         )
@@ -275,7 +275,7 @@ def main():
         predict_dataset = predict_dataset.remove_columns(label_key)
         predictions = trainer.predict(predict_dataset, metric_key_prefix="predict").predictions
         predictions = np.argmax(predictions, axis=1)
-
+        
         output_dir = os.path.join(training_args.output_dir, 'predictions')
         ensure_dir(output_dir)
         output_predict_file = os.path.join(output_dir, f'{data_args.dataset_name}_predictions.txt')
